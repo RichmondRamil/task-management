@@ -1,13 +1,16 @@
 // lib/supabase.ts
-import { createClientComponentClient, createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { Database } from './types/database'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { Database } from "./types/database";
 
-// Client-side Supabase client
-export const createClient = () => createClientComponentClient<Database>()
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Server-side Supabase client
-export const createServerClient = () => createServerComponentClient<Database>({ cookies })
+// Client-side Supabase client (for browser)
+export const createClient = () => createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey)
 
-// For middleware
-export { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+// Legacy exports for compatibility
+export {
+  createPagesBrowserClient,
+  createPagesServerClient,
+  createMiddlewareClient
+} from "@supabase/auth-helpers-nextjs";

@@ -7,6 +7,12 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+// Define enums for better type safety
+export type ProjectStatus = 'active' | 'completed' | 'archived'
+export type TaskStatus = 'todo' | 'in_progress' | 'done'
+export type TaskPriority = 'low' | 'medium' | 'high'
+export type MemberRole = 'owner' | 'admin' | 'member'
+
 export interface Database {
   public: {
     Tables: {
@@ -45,7 +51,7 @@ export interface Database {
           id: string
           name: string
           description: string | null
-          status: 'active' | 'completed' | 'archived'
+          status: ProjectStatus
           owner_id: string
           created_at: string
           updated_at: string
@@ -54,7 +60,7 @@ export interface Database {
           id?: string
           name: string
           description?: string | null
-          status?: 'active' | 'completed' | 'archived'
+          status?: ProjectStatus
           owner_id: string
           created_at?: string
           updated_at?: string
@@ -63,7 +69,7 @@ export interface Database {
           id?: string
           name?: string
           description?: string | null
-          status?: 'active' | 'completed' | 'archived'
+          status?: ProjectStatus
           owner_id?: string
           created_at?: string
           updated_at?: string
@@ -82,8 +88,8 @@ export interface Database {
           id: string
           title: string
           description: string | null
-          status: 'todo' | 'in_progress' | 'done'
-          priority: 'low' | 'medium' | 'high'
+          status: TaskStatus
+          priority: TaskPriority
           due_date: string | null
           project_id: string | null
           assignee_id: string | null
@@ -95,8 +101,8 @@ export interface Database {
           id?: string
           title: string
           description?: string | null
-          status?: 'todo' | 'in_progress' | 'done'
-          priority?: 'low' | 'medium' | 'high'
+          status?: TaskStatus
+          priority?: TaskPriority
           due_date?: string | null
           project_id?: string | null
           assignee_id?: string | null
@@ -108,8 +114,8 @@ export interface Database {
           id?: string
           title?: string
           description?: string | null
-          status?: 'todo' | 'in_progress' | 'done'
-          priority?: 'low' | 'medium' | 'high'
+          status?: TaskStatus
+          priority?: TaskPriority
           due_date?: string | null
           project_id?: string | null
           assignee_id?: string | null
@@ -143,21 +149,21 @@ export interface Database {
           id: string
           project_id: string
           user_id: string
-          role: 'owner' | 'admin' | 'member'
+          role: MemberRole
           joined_at: string
         }
         Insert: {
           id?: string
           project_id: string
           user_id: string
-          role?: 'owner' | 'admin' | 'member'
+          role?: MemberRole
           joined_at?: string
         }
         Update: {
           id?: string
           project_id?: string
           user_id?: string
-          role?: 'owner' | 'admin' | 'member'
+          role?: MemberRole
           joined_at?: string
         }
         Relationships: [
@@ -183,7 +189,10 @@ export interface Database {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      project_status: ProjectStatus
+      task_status: TaskStatus
+      task_priority: TaskPriority
+      member_role: MemberRole
     }
     CompositeTypes: {
       [_ in never]: never
