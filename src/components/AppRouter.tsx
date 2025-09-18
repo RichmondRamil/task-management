@@ -1,8 +1,8 @@
 'use client'
 
 import { useAuth } from '../lib/contexts/AuthContext'
-import Dashboard from './Dashboard'
 import LandingPage from './LandingPage'
+import Projects from './Projects'
 
 export default function AppRouter() {
   const { user, loading, session } = useAuth()
@@ -27,10 +27,10 @@ export default function AppRouter() {
     )
   }
 
-  // If user is authenticated, show Dashboard
+  // If user is authenticated, show Projects
   if (user) {
-    console.log('✅ AppRouter: User authenticated, showing Dashboard')
-    return <Dashboard />
+    console.log('✅ AppRouter: User authenticated, showing Projects')
+    return <Projects />
   }
 
   // If user is not authenticated, show Landing Page

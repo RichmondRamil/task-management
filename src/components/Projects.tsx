@@ -18,7 +18,7 @@ import { Plus, Trash2, Edit, Check, X, ArrowUpDown, ChevronDown, ChevronUp } fro
 import { toast } from 'sonner';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 
-export default function Dashboard() {
+export default function Projects() {
   // Auth and data hooks
   const { user, loading: authLoading, createProfile, fetchProfile, profile: userProfile } = useAuth();
   const {

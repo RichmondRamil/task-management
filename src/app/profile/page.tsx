@@ -51,10 +51,10 @@ export default function ProfilePage() {
 
         <div className="mt-6 text-center">
           <Link
-            href="/dashboard"
+            href="/projects"
             className="text-blue-600 hover:text-blue-500 text-sm"
           >
-            ← Back to dashboard
+            ← Back to projects
           </Link>
         </div>
       </div>

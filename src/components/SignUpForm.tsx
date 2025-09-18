@@ -51,8 +51,8 @@ export function SignUpForm() {
       console.log('📧 User needs email confirmation')
       setSuccess('Check your email for the confirmation link!')
     } else if (data?.session) {
-      console.log('✅ User signed up and logged in, redirecting to dashboard')
-      router.push('/dashboard')
+      console.log('✅ User signed up and logged in, redirecting to projects')
+      router.push('/projects')
     }
     
     setLoading(false)
