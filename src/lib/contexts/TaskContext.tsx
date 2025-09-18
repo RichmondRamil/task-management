@@ -157,6 +157,44 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
+      const assigneeId = task.assignee_id || task.assigneeId;
+      const projectId = task.project_id || task.projectId;
+      
+      // If there's an assignee and a project, ensure they're a member
+      if (assigneeId && projectId) {
+        try {
+          // First, check if the assignee is already a member
+          const { data: existingMember, error: memberCheckError } = await supabase
+            .from('project_members')
+            .select('id')
+            .eq('project_id', projectId)
+            .eq('user_id', assigneeId)
+            .maybeSingle();
+            
+          if (memberCheckError) throw memberCheckError;
+          
+          // If not a member, add them as a member with 'member' role
+          if (!existingMember) {
+            const { error: addMemberError } = await supabase
+              .from('project_members')
+              .insert([
+                { 
+                  project_id: projectId, 
+                  user_id: assigneeId, 
+                  role: 'member' 
+                }
+              ]);
+              
+            if (addMemberError) throw addMemberError;
+            console.log(`Added user ${assigneeId} as member to project ${projectId}`);
+          }
+        } catch (memberError) {
+          console.error('Error managing project member:', memberError);
+          // Don't fail the task creation if member addition fails
+          // Just log the error and continue
+        }
+      }
+      
       // Prepare task data for database (using snake_case)
       const taskData = {
         title: task.title,
@@ -164,8 +202,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         status: task.status,
         priority: task.priority,
         due_date: task.due_date || task.dueDate || null,
-        project_id: task.project_id || task.projectId || null,
-        assignee_id: task.assignee_id || task.assigneeId || null,
+        project_id: projectId,
+        assignee_id: assigneeId,
         created_by: task.created_by || task.createdBy
       };
 
@@ -295,6 +333,23 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   const deleteTask = async (id: string): Promise<void> => {
     try {
       setLoading(true);
+      
+      // 1. First, get the task to be deleted
+      const { data: taskToDelete, error: fetchError } = await supabase
+        .from('tasks')
+        .select('id, project_id, assignee_id')
+        .eq('id', id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      if (!taskToDelete) {
+        throw new Error('Task not found');
+      }
+      
+      const { project_id: projectId, assignee_id: assigneeId } = taskToDelete;
+      
+      // 2. Delete the task
       const { error } = await supabase
         .from('tasks')
         .delete()
@@ -302,8 +357,43 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       
       if (error) throw error;
       
-      // Update local state by removing the deleted task
+      // 3. If the task had an assignee, check if they should be removed from project members
+      if (assigneeId && projectId) {
+        try {
+          // Check if the assignee has any other tasks in this project
+          const { count, error: countError } = await supabase
+            .from('tasks')
+            .select('*', { count: 'exact', head: true })
+            .eq('project_id', projectId)
+            .eq('assignee_id', assigneeId)
+            .neq('id', id); // Exclude the task being deleted
+            
+          if (countError) throw countError;
+          
+          // If no other tasks found for this assignee in the project, remove them from project members
+          if (count === 0) {
+            const { error: deleteMemberError } = await supabase
+              .from('project_members')
+              .delete()
+              .eq('project_id', projectId)
+              .eq('user_id', assigneeId);
+              
+            if (deleteMemberError) {
+              console.error('Error removing project member:', deleteMemberError);
+              // Don't fail the task deletion if member removal fails
+            } else {
+              console.log(`Removed user ${assigneeId} from project ${projectId} members`);
+            }
+          }
+        } catch (memberError) {
+          console.error('Error managing project member during task deletion:', memberError);
+          // Don't fail the task deletion if member check/removal fails
+        }
+      }
+      
+      // 4. Update local state by removing the deleted task
       setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task');
       console.error('Error deleting task:', err);

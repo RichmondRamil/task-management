@@ -23,6 +23,7 @@ interface ProjectContextType {
   deleteProject: (id: string) => Promise<void>;
   fetchProjects: () => Promise<void>;
   getProject: (id: string) => Project | undefined;
+  addProjectMember: (projectId: string, userId: string, role?: string) => Promise<void>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -42,15 +43,42 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Not authenticated');
       }
 
-      // Fetch projects with their tasks in a single query
-      const { data, error } = await supabase
+      // First, get all project IDs where the user is a member
+      const { data: memberProjects, error: memberError } = await supabase
+        .from('project_members')
+        .select('project_id')
+        .eq('user_id', session.user.id);
+
+      if (memberError) throw memberError;
+      
+      // Get all project IDs where user is either owner or member
+      const projectIds = [
+        ...(memberProjects?.map(p => p.project_id) || [])
+      ];
+
+      // If no projects found and not an owner, return empty array
+      if (projectIds.length === 0) {
+        setProjects([]);
+        return;
+      }
+
+      // Fetch projects where user is either owner or member
+      let query = supabase
         .from('projects')
         .select(`
           *,
           tasks (*)
-        `)
-        .eq('owner_id', session.user.id)
-        .order('created_at', { ascending: false });
+        `);
+      
+      // If user has member projects, add them to the query
+      if (projectIds.length > 0) {
+        query = query.or(`id.in.(${projectIds.join(',')}),owner_id.eq.${session.user.id}`);
+      } else {
+        // If no member projects, only get owned projects
+        query = query.eq('owner_id', session.user.id);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setProjects(data || []);
@@ -71,6 +99,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Not authenticated');
       }
 
+      // Start a transaction to ensure both operations succeed or fail together
       const { data, error } = await supabase
         .from('projects')
         .insert([{ ...project, owner_id: session.user.id }])
@@ -78,6 +107,19 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) throw error;
+      
+      // Add the creator as an owner of the project
+      const { error: memberError } = await supabase
+        .from('project_members')
+        .insert([
+          { 
+            project_id: data.id, 
+            user_id: session.user.id, 
+            role: 'owner' 
+          }
+        ]);
+
+      if (memberError) throw memberError;
       
       setProjects(prev => prev ? [data, ...prev] : [data]);
       return data;
@@ -115,9 +157,18 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteProject = async (id: string) => {
-    setLoading(true);
-    setError(null);
     try {
+      setLoading(true);
+      
+      // First, delete all project members
+      const { error: deleteMembersError } = await supabase
+        .from('project_members')
+        .delete()
+        .eq('project_id', id);
+        
+      if (deleteMembersError) throw deleteMembersError;
+      
+      // Then delete the project
       const { error } = await supabase
         .from('projects')
         .delete()
@@ -125,7 +176,9 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
       
-      setProjects(prev => prev?.filter(project => project.id !== id) || null);
+      // Update local state
+      setProjects(prev => prev?.filter(project => project.id !== id) || []);
+      
     } catch (err) {
       console.error('Error deleting project:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete project');
@@ -139,24 +192,53 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     return projects?.find(project => project.id === id);
   };
 
+  const addProjectMember = async (projectId: string, userId: string, role: string = 'member'): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const { error } = await supabase
+        .from('project_members')
+        .insert([
+          { 
+            project_id: projectId, 
+            user_id: userId, 
+            role: role as any // Type assertion since we know the role is valid
+          }
+        ]);
+
+      if (error) throw error;
+      
+      // Refresh the projects to reflect the new member
+      await fetchProjects();
+    } catch (err) {
+      console.error('Error adding project member:', err);
+      setError(err instanceof Error ? err.message : 'Failed to add project member');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Initial fetch
   useEffect(() => {
     fetchProjects();
   }, []);
 
+  const value = {
+    projects,
+    loading,
+    error,
+    createProject,
+    updateProject,
+    deleteProject,
+    fetchProjects,
+    getProject,
+    addProjectMember,
+  };
+
   return (
-    <ProjectContext.Provider
-      value={{
-        projects,
-        loading,
-        error,
-        createProject,
-        updateProject,
-        deleteProject,
-        fetchProjects,
-        getProject,
-      }}
-    >
+    <ProjectContext.Provider value={value}>
       {children}
     </ProjectContext.Provider>
   );

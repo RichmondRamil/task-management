@@ -93,6 +93,19 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     }
   }, [task, projectId, userId])
 
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: null,
+      status: 'todo',
+      priority: 'medium',
+      dueDate: null,
+      projectId: projectId,
+      assigneeId: null,
+      createdBy: userId,
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -110,6 +123,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       };
       
       await onSubmit(taskData);
+      resetForm();
       onOpenChange(false);
     } catch (error) {
       console.error('Error submitting task:', error);
