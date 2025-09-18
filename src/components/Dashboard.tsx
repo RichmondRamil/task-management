@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTasks } from '@/lib/contexts/TaskContext';
+import { getStatusColor, formatStatus } from '@/lib/utils/projectUtils';
 import { TaskStatus, TaskPriority } from '@/lib/types/database';
 import { useProjects } from '@/lib/contexts/ProjectContext';
 import { useProfiles } from '@/lib/contexts/ProfileContext';
@@ -489,7 +490,9 @@ export default function Dashboard() {
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <span>{projectTasks[project.id]?.length || 0} {projectTasks[project.id]?.length === 1 ? 'task' : 'tasks'}</span>
                       <span>•</span>
-                      <span className="capitalize">{project.status}</span>
+                      <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${getStatusColor(project.status)}`}>
+                        {formatStatus(project.status)}
+                      </span>
                       <span>•</span>
                       <span>{new Date(project.created_at).toLocaleDateString()}</span>
                     </div>
