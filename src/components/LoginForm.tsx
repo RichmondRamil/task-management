@@ -38,8 +38,8 @@ export function LoginForm() {
       return
     }
 
-    console.log('✅ Login successful, redirecting to dashboard')
-    router.push('/dashboard')
+    console.log('✅ Login successful, redirecting to projects')
+    router.push('/projects')
     setLoading(false)
   }
 
