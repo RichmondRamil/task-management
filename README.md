@@ -1,6 +1,6 @@
 # Data Model
 
-![Data Model Diagram](https://previews.dropbox.com/p/thumb/ACyFXU7FaZjFR2CIm5RFG9ctssOTmcF83s30UV7gA38_K7igrtXQ3wNESqHw8xr2XutKjZ03Mtp_rFYGZ_x14Z5rJ9UFvgZFcQhLkiWhjipZ6ap5u2sExoTmepJpSYDi8scISma-iaoPHSmg531dAik_WDFR83JAzuP3qQuxZ1pGdOHKRUbAOQRoI55O4TjwOkD7MnQt6tUG5lG52iqXgqdUIAfWHLL-bnt49omDfh1xlqxn77RLGr-DJwsaDK78n6k3yO_q8TG_B2SGeNELfNsNBWJoOKuBSqVADKVzy1-mfF5-36ulj0OZr61-9EclMUc/p.png)
+<img width="870" height="513" alt="Image" src="https://github.com/user-attachments/assets/e09569a3-0962-438c-92d6-97b2ab01adb5" />
 
 ## Core Entities
 - **Profile** – User accounts with email, name, and bio  
@@ -25,21 +25,21 @@
 ### 1. Sign In
 **Description:** Users can securely log in with their account credentials.  
 **GIF:**  
-![Sign In](https://previews.dropbox.com/p/thumb/ACybc0aSJXJt_YM8pd6SCueIQr6mVmJdfl0-_Ma2etXKsGekn3euD5hTs-ocmuOr69uZUnV0g6kLoA_PGDFEtc4TVQrdqsrLuHzKKumH-DELPyS6DVdLLiYWyoL_yfnbIfRBGHSOZy2FtjrmQ_cP8DpuwAGGA44lRBLFRFsl0qDN4CFP8dJyKBWY7GV9LCxiP9ihFhAaKPtttToTkwVlNexHcC-79iSoo4DluDW-K5zrH_dZuCtMg4bqIXcmA5okx-eso5RbzjkBsTVOee6wGNulrDrh4EmX9tCidvJTfK6uub5ROHtXreRSHtoIqj2of4MgqwHYSkZmNYm5JnLze4U6/p.gif)
+![Image](https://github.com/user-attachments/assets/71a9b107-37e4-4b2c-b16c-03a4fdb5f935)
 
 ---
 
 ### 2. Sign Up
 **Description:** New users can register by providing their details.  
 **GIF:**  
-![Sign Up](https://previews.dropbox.com/p/thumb/ACxCEejzsmdD9E5Kpzv40hRsyEGOCSSXLbdxVWxDICkRaWEYvqE3Doe1TcjBYiHOUSe7Yq9jXS7sEZzoQbJP7-lBxfGQl62r3tX9AZRL5quf42SLRiTBKuWr4oWhQmf7eN-4j8_JnIROcbVe1OUnNuxTPTcWGocW1I4Kyt_KPjV32itOwRLmf3HWt92FmPzMREh8JRQNsiI_fHD8qjopNkDvQbfhiuxvxJQGJZuSGpZknwC1H0vGIsXOPG-QkEH2QoO_nq7qORAmoZdnBk1TOl_-R7dNZWep5uxxcpCYq4G1ymGFvg_CX-TArrKbut9HIyMgD3Ok-9XEKSZY2kXv1-dIAk5VNLEy5wu5DQD_h1b37LDQvL9JFJLSX5rUX5Ca8Zxz9rJ3JmIsZsrR_o34LHAp/p.gif)
+![Image](https://github.com/user-attachments/assets/df4be72c-ef55-4cf3-ab77-3eae11e8317d)
 
 ---
 
 ### 3. Create New Project
 **Description:** Users can create a new project and become its owner.  
 **GIF:**  
-![Create Project](https://previews.dropbox.com/p/thumb/ACxY7KfAUPphbr_iYv8px5Y1DyyA9kXjPpfupMx2gL_A3_HmP1Qi0HgyehQsSMZFcp6pkKkhTanpWvdr2uJSvGd8Xfc_qeBqea13HfyV_BB0bAtW4H1dLImjhHyaBHl2Mq2YKm0RQDF2nAPpfgCzKur7P-NdQjLr_NbDcKWSKmTX19vykQ4xyysN86ltAUTdK1Tzipv3fU3T2P9ddc6VmSlAG62ewxEjpc5rCHZwQX3da8AJLuj1vPAQD0PWTJS3dV7cGtLKORMNTCwnzWlfOmKWZGD24n25ooTVtDQa4cyBt1eWRVgpewhEG5wpd1YPxfBjQe-x_-wfD6qF43KfpGtj3DUyZ_B3VWtvfN5A77fu2da7ovsryPz37zkaEvsXOdbCzDBXIIDVt70kQrTnqT5tiVNppzAEuCnzeecnj2ab0lzh7L4_pIcxm1wVDqLKVtwxxSNtJ1_FHfR5z5e4sW7H/p.gif)
+![Image](https://github.com/user-attachments/assets/c81c530f-6375-4e96-8b41-a3d45027696a)
 
 ---
 
@@ -53,7 +53,7 @@
 ### 5. Update Task & Project
 **Description:** Tasks and project details can be updated by authorized users.  
 **GIF:**  
-![Update Task & Project](https://previews.dropbox.com/p/thumb/ACyanCtFZ7ZqXdSCvUq8GBlUhXUJzF-njlClrBA3rxpAEFOLQBSiYsLXQDvClt13axHxqTjTSoo6YKcTptMaOMftht6YThtrtZR72vy5c1ku95owc2AOZ8TAtiYGPDSJuNdGICLI8Fasxlxx9gBkpDTzU8TTgToBWYaOme-MfenOZ3272k_4LKilwxAU1OKaY_8RBwwny2FfTGXx7L5fAMDMJcuGcSjx2_icq_0xWLTuRHz8D7SfFptl4_JRlqcdfRmfcxbL4QrOFn0pJudrWlDPnI5QXWTtKnZeNyeH7Kf_4GnZF4vMqXmkV7F_GIdgxEw/p.gif)
+![Image](https://github.com/user-attachments/assets/dc9d12cd-758b-4801-89cd-7353f9d96312)
 
 ---
 
