@@ -13,6 +13,8 @@ export type TaskStatus = 'todo' | 'in_progress' | 'done'
 export type TaskPriority = 'low' | 'medium' | 'high'
 export type MemberRole = 'owner' | 'admin' | 'member'
 
+export type Profile = Database['public']['Tables']['profiles']['Row']
+
 export type Project = Database['public']['Tables']['projects']['Row']
 
 // Base task type with snake_case fields

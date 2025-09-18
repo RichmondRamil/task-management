@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTasks } from '@/lib/contexts/TaskContext';
 import { TaskStatus, TaskPriority } from '@/lib/types/database';
 import { useProjects } from '@/lib/contexts/ProjectContext';
+import { useProfiles } from '@/lib/contexts/ProfileContext';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Task, Project, ProjectStatus } from '@/lib/types/database';
 import { TaskModal } from './TaskModal';
 import { ProjectModal } from './ProjectModal';
@@ -16,7 +19,7 @@ import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 
 export default function Dashboard() {
   // Auth and data hooks
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, createProfile, fetchProfile, profile: userProfile } = useAuth();
   const {
     projects,
     loading: projectsLoading,
@@ -32,6 +35,8 @@ export default function Dashboard() {
     getProjectTasks,
     createTask: createTaskFromContext
   } = useTasks();
+  
+  const { profiles } = useProfiles();
 
   // State management
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -46,6 +51,35 @@ export default function Dashboard() {
   const [itemToDelete, setItemToDelete] = useState<{ id: string; type: 'project' | 'task' } | null>(null);
   const [projectName, setProjectName] = useState('');
   const [projectTasks, setProjectTasks] = useState<Record<string, Task[]>>({});
+  const hasCheckedProfile = useRef(false);
+
+  // Check and create profile if it doesn't exist
+  useEffect(() => {
+    const checkAndCreateProfile = async () => {
+      if (!user || hasCheckedProfile.current) return;
+      hasCheckedProfile.current = true;
+
+      // Check if profile exists in the profiles array
+      const profileExists = profiles.some(profile => profile.id === user.id);
+      
+      if (!profileExists) {
+        try {
+          await createProfile(
+            user.id, 
+            user.email || '', 
+            user.user_metadata?.display_name || user.email?.split('@')[0] || 'User'
+          );
+          console.log('Profile created successfully');
+        } catch (error) {
+          console.error('Error creating profile:', error);
+        }
+      } else {
+        console.log('Profile exists');
+      }
+    };
+
+    checkAndCreateProfile();
+  }, [user, profiles, createProfile]);
   const [sortConfig, setSortConfig] = useState<{
     key: 'priority' | 'dueDate' | 'title' | 'status';
     direction: 'asc' | 'desc';
@@ -235,6 +269,22 @@ export default function Dashboard() {
     }
   };
 
+  // Handle project deletion
+  const handleDeleteProject = async (projectId: string) => {
+    try {
+      await deleteProject(projectId);
+      toast.success('Project deleted successfully');
+      setSelectedProjectId(null);
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast.error('Failed to delete project');
+    } finally {
+      setItemToDelete(null);
+      setIsDeleteProjectModalOpen(false);
+    }
+  };
+
+  // Handle task deletion
   const handleDeleteTask = async (taskId: string) => {
     try {
       await deleteTask(taskId);
@@ -242,6 +292,9 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error deleting task:', error);
       toast.error('Failed to delete task');
+    } finally {
+      setItemToDelete(null);
+      setIsDeleteTaskModalOpen(false);
     }
   };
 
@@ -428,22 +481,17 @@ export default function Dashboard() {
       {projects && projects.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => (
-            <Card key={project.id} className="overflow-hidden">
+            <Card key={project.id} className="flex flex-col h-full">
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
-                  <div>
+                  <div className="space-y-1">
                     <h2 className="text-xl font-semibold">{project.name}</h2>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <span className="text-xs text-gray-500">
-                        Created: {new Date(project.created_at).toLocaleDateString()}
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${getProjectStatusColor(
-                          project.status as ProjectStatus
-                        )}`}
-                      >
-                        {project.status.charAt(0).toUpperCase() + project.status.slice(1).replace('_', ' ')}
-                      </span>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <span>{projectTasks[project.id]?.length || 0} {projectTasks[project.id]?.length === 1 ? 'task' : 'tasks'}</span>
+                      <span>•</span>
+                      <span className="capitalize">{project.status}</span>
+                      <span>•</span>
+                      <span>{new Date(project.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
                   <div className="flex space-x-2">
@@ -468,8 +516,8 @@ export default function Dashboard() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
+              <CardContent className="flex-1 flex flex-col">
+                <div className="space-y-2 flex-1">
                   <Button
                     variant="outline"
                     className="w-full mb-4"
@@ -495,16 +543,33 @@ export default function Dashboard() {
                           {task.status === 'done' && <Check className="h-3 w-3" />}
                         </button>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center">
-                            <h4
-                              className={`font-medium ${task.status === 'done' ? 'line-through text-gray-400' : ''}`}
-                            >
-                              {task.title}
-                            </h4>
-                            {task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done' && (
-                              <span className="ml-2 text-xs text-red-500 font-medium whitespace-nowrap">
-                                (Overdue)
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              <span className={`font-medium ${task.status === 'done' ? 'line-through text-gray-400' : ''}`}>
+                                {task.title}
                               </span>
+                              {task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done' && (
+                                <span className="text-xs text-red-500">(Overdue)</span>
+                              )}
+                            </div>
+                            {task.assignee_id && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Avatar className="h-6 w-6 text-xs">
+                                      <AvatarFallback>
+                                        {profiles.find(p => p.id === task.assignee_id)?.full_name
+                                          ?.split(' ')
+                                          .map(n => n[0])
+                                          .join('') || '?'}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Assigned to: {profiles.find(p => p.id === task.assignee_id)?.full_name || 'Unknown'}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             )}
                           </div>
                           {task.description && (
@@ -596,6 +661,54 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
+                <div className="mt-4 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-500">Team Members:</div>
+                    <div className="flex -space-x-2">
+                      {Array.from(new Set(
+                        projectTasks[project.id]?.flatMap(task => 
+                          task.assignee_id ? [task.assignee_id] : []
+                        ) || []
+                      )).slice(0, 5).map((assigneeId) => {
+                        const profile = profiles.find(p => p.id === assigneeId);
+                        if (!profile) return null;
+                        
+                        return (
+                          <TooltipProvider key={assigneeId}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Avatar className="h-8 w-8 border-2 border-white dark:border-gray-800 hover:z-10 transition-transform hover:scale-110">
+                                  <AvatarFallback className="text-xs">
+                                    {profile.full_name
+                                      ?.split(' ')
+                                      .map(n => n[0])
+                                      .join('') || '?'}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{profile.full_name || 'Unknown'}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })}
+                      {new Set(
+                        projectTasks[project.id]?.flatMap(task => 
+                          task.assignee_id ? [task.assignee_id] : []
+                        ) || []
+                      ).size > 5 && (
+                        <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium">
+                          +{new Set(
+                            projectTasks[project.id]?.flatMap(task => 
+                              task.assignee_id ? [task.assignee_id] : []
+                            ) || []
+                          ).size - 5}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -617,6 +730,7 @@ export default function Dashboard() {
           projectId={editingTask?.project_id || selectedProjectId || ''}
           userId={user.id}
           task={editingTask}
+          profiles={profiles}
           onSubmit={async (formData) => {
             try {
               // Ensure we have a project ID (should always be true due to the UI flow)
@@ -634,12 +748,12 @@ export default function Dashboard() {
                 status: formData.status,
                 project_id: projectId,
                 created_by: user.id,
-                assignee_id: null,
+                assignee_id: formData.assigneeId,  // Use the assigneeId from form data
                 // Include camelCase versions for frontend compatibility
                 dueDate: formData.dueDate,
                 projectId: projectId,
                 createdBy: user.id,
-                assigneeId: null
+                assigneeId: formData.assigneeId    // Use the assigneeId from form data
               };
 
               if (editingTask) {
@@ -691,21 +805,22 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Delete Confirmation Modals */}
+      {/* Delete Project Confirmation Modal */}
       <DeleteConfirmationModal
         isOpen={isDeleteProjectModalOpen}
         onOpenChange={setIsDeleteProjectModalOpen}
-        onConfirm={handleConfirmDelete}
+        onConfirm={() => itemToDelete && handleDeleteProject(itemToDelete.id)}
         title="Delete Project"
-        description="Are you sure you want to delete this project? This action cannot be undone and will also delete all tasks within it."
+        description="Are you sure you want to delete this project? All tasks in this project will also be deleted. This action cannot be undone."
         confirmButtonText="Delete Project"
         variant="destructive"
       />
 
+      {/* Delete Task Confirmation Modal */}
       <DeleteConfirmationModal
         isOpen={isDeleteTaskModalOpen}
         onOpenChange={setIsDeleteTaskModalOpen}
-        onConfirm={handleConfirmDelete}
+        onConfirm={() => itemToDelete && handleDeleteTask(itemToDelete.id)}
         title="Delete Task"
         description="Are you sure you want to delete this task? This action cannot be undone."
         confirmButtonText="Delete Task"

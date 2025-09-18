@@ -301,6 +301,9 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         .eq('id', id);
       
       if (error) throw error;
+      
+      // Update local state by removing the deleted task
+      setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task');
       console.error('Error deleting task:', err);

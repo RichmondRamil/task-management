@@ -2,11 +2,12 @@
 
 import * as React from 'react'
 import { useState, useEffect } from 'react'
-import { Task, TaskStatus, TaskPriority } from '@/lib/types/database'
+import { Task, TaskStatus, TaskPriority, Profile } from '@/lib/types/database'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,7 @@ interface TaskModalProps {
   projectId: string;
   userId: string;
   task?: Task | null;
+  profiles: Profile[];
   onSubmit: (task: TaskFormData) => Promise<void>;
 }
 
@@ -48,6 +50,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   projectId,
   userId,
   task,
+  profiles = [],
   onSubmit,
 }) => {
   // Initialize form state with proper type
@@ -120,18 +123,53 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           <DialogHeader>
             <DialogTitle>{task ? 'Edit Task' : 'Create New Task'}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
               <Input
                 id="title"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Task title"
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
                 required
               />
             </div>
-            
+
+            <div className="space-y-2">
+              <Label htmlFor="assigneeId">Assignee</Label>
+              <Select
+                value={formData.assigneeId === null ? 'unassigned' : formData.assigneeId || ''}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, assigneeId: value === 'unassigned' ? null : value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an assignee" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {profiles.map((profile) => (
+                    <SelectItem key={profile.id} value={profile.id}>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-5 w-5">
+                          <AvatarFallback>
+                            {profile.full_name
+                              ? profile.full_name
+                                  .split(' ')
+                                  .map((n) => n[0])
+                                  .join('')
+                              : '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{profile.full_name || profile.email}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
