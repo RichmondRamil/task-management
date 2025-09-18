@@ -3,6 +3,9 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '../lib/contexts/AuthContext'
+import { ProjectProvider } from '../lib/contexts/ProjectContext'
+import { TaskProvider } from '../lib/contexts/TaskContext'
+import { ProfileProvider } from '../lib/contexts/ProfileContext'
 import { Navigation } from '../components/layout/Navigation'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -21,12 +24,18 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <div className="min-h-screen bg-gray-50">
-            <Navigation />
-            <main>
-              {children}
-            </main>
-          </div>
+          <ProjectProvider>
+            <TaskProvider>
+              <ProfileProvider>
+                <div className="min-h-screen bg-gray-50">
+                  <Navigation />
+                  <main className="container mx-auto py-8 px-4">
+                    {children}
+                  </main>
+                </div>
+              </ProfileProvider>
+            </TaskProvider>
+          </ProjectProvider>
         </AuthProvider>
       </body>
     </html>
