@@ -1,7 +1,7 @@
 // lib/utils/taskUtils.ts
 import { Task } from '@/lib/types/database'
 
-export function transformTaskData(task: any): Task {
+export function transformTaskData(task: Task): Task {
   return {
     ...task,
     // Ensure all required fields exist with proper casing

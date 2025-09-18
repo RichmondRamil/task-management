@@ -46,8 +46,8 @@ export type Task = {
     name: string
     status: ProjectStatus
   } | null
-  creator?: any // Add proper type if needed
-  assignee?: any // Add proper type if needed
+  creator?: Profile | null
+  assignee?: Profile | null
 }
 
 export interface Database {

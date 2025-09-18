@@ -227,9 +227,13 @@ export default function Projects() {
         const statusOrder = { todo: 1, in_progress: 2, done: 3 };
         aValue = statusOrder[a.status as keyof typeof statusOrder] || 0;
         bValue = statusOrder[b.status as keyof typeof statusOrder] || 0;
+      } else if (key === 'title') {
+        aValue = a.title;
+        bValue = b.title;
       } else {
-        aValue = a[key as keyof Task];
-        bValue = b[key as keyof Task];
+        // Default case that should never be reached due to the function's type signature
+        aValue = '';
+        bValue = '';
       }
 
       if (aValue === bValue) return 0;
