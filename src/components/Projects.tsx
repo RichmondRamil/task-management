@@ -213,7 +213,8 @@ export default function Projects() {
   // Sort tasks based on the given key and direction
   const sortTasks = (tasks: Task[], key: 'priority' | 'dueDate' | 'title' | 'status' = 'dueDate', direction: 'asc' | 'desc' = 'asc') => {
     return [...tasks].sort((a, b) => {
-      let aValue: any, bValue: any;
+      type SortableValue = number | string;
+      let aValue: SortableValue, bValue: SortableValue;
 
       if (key === 'dueDate') {
         aValue = a.due_date ? new Date(a.due_date).getTime() : Number.MAX_SAFE_INTEGER;

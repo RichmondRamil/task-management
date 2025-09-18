@@ -18,7 +18,7 @@ export function transformTaskData(task: any): Task {
   }
 }
 
-export function prepareTaskForApi(task: Partial<Task>): any {
+export function prepareTaskForApi(task: Partial<Task>) {
   return {
     ...task,
     // Ensure snake_case fields are set from camelCase if needed

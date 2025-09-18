@@ -3,27 +3,6 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
 import { projectService } from './service'
 
-// Define types based on your database schema
-type Project = {
-  id: string;
-  name: string;
-  description: string | null;
-  owner_id: string;
-  status: 'active' | 'completed' | 'archived';
-  created_at: string;
-  updated_at: string;
-};
-
-type ProjectInsert = Omit<Project, 'id' | 'created_at' | 'updated_at'>;
-
-type ProjectMemberInsert = {
-  id?: string;
-  project_id: string;
-  user_id: string;
-  role: 'owner' | 'admin' | 'member';
-  joined_at: string;
-};
-
 // POST - Create a new project
 export async function POST(request: Request) {
   try {

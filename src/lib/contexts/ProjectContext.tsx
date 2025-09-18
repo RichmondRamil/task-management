@@ -201,7 +201,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
           { 
             project_id: projectId, 
             user_id: userId, 
-            role: role as any // Type assertion since we know the role is valid
+            role: role as 'owner' | 'admin' | 'member'
           }
         ]);
 

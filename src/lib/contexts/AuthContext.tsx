@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       console.log('📤 Inserting profile data:', profileData)
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabase)
         .from('profiles')
         .upsert(profileData, { onConflict: 'id', ignoreDuplicates: true })
         .select()

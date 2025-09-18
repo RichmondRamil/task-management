@@ -254,7 +254,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       
       // Convert camelCase to snake_case for database
-      const updateData: any = { ...updates };
+      const updateData = { ...updates };
       
       // Handle field name conversions
       if ('dueDate' in updates) {
