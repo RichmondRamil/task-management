@@ -17,9 +17,6 @@ export type Profile = Database['public']['Tables']['profiles']['Row']
 
 export type Project = Database['public']['Tables']['projects']['Row']
 
-// Base task type with snake_case fields
-type BaseTask = Database['public']['Tables']['tasks']['Row']
-
 // Task type with both snake_case and camelCase properties
 export type Task = {
   // Database fields

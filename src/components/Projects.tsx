@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTasks } from '@/lib/contexts/TaskContext';
-import { getStatusColor, formatStatus } from '@/lib/utils/projectUtils';
+import { formatStatus } from '@/lib/utils/projectUtils';
 import { TaskStatus, TaskPriority } from '@/lib/types/database';
 import { useProjects } from '@/lib/contexts/ProjectContext';
 import { useProfiles } from '@/lib/contexts/ProfileContext';
@@ -20,7 +20,7 @@ import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 
 export default function Projects() {
   // Auth and data hooks
-  const { user, loading: authLoading, createProfile, fetchProfile, profile: userProfile } = useAuth();
+  const { user, loading: authLoading, createProfile } = useAuth();
   const {
     projects,
     loading: projectsLoading,
@@ -30,7 +30,6 @@ export default function Projects() {
   } = useProjects();
 
   const {
-    tasks: allTasks,
     updateTask,
     deleteTask,
     getProjectTasks,
@@ -81,21 +80,6 @@ export default function Projects() {
 
     checkAndCreateProfile();
   }, [user, profiles, createProfile]);
-  const [sortConfig, setSortConfig] = useState<{
-    key: 'priority' | 'dueDate' | 'title' | 'status';
-    direction: 'asc' | 'desc';
-  }>({ key: 'dueDate', direction: 'asc' });
-
-  // Get priority color class
-  const getPriorityColor = (priority: TaskPriority) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   // Get status color class
   const getStatusColor = (status: string) => {
     if (status === 'done') return 'bg-green-100 text-green-800';
@@ -197,79 +181,6 @@ export default function Projects() {
     }
   }, [getProjectTasks]);
 
-  // Task operations
-  type CreateTaskData = {
-    title: string;
-    description?: string | null;
-    status?: TaskStatus;
-    project_id?: string;
-    created_by?: string;
-    created_at?: string;
-    updated_at?: string;
-    createdAt?: string;
-    updatedAt?: string;
-    priority?: TaskPriority;
-    dueDate?: string | null;
-    assigneeId?: string | null;
-  };
-
-  const createTask = async (taskData: CreateTaskData) => {
-    if (!user) {
-      toast.error('You must be logged in to create a task');
-      return;
-    }
-
-    try {
-      const now = new Date().toISOString();
-      const dueDate = taskData.dueDate || null;
-      const projectId = selectedProjectId;
-      const assigneeId = taskData.assigneeId || null;
-      const createdBy = user.id;
-
-      if (!projectId) {
-        throw new Error('No project selected');
-      }
-
-      const taskToCreate = {
-        title: taskData.title,
-        description: taskData.description || null,
-        status: taskData.status || 'todo',
-        priority: taskData.priority || 'medium',
-        due_date: dueDate,
-        project_id: projectId,
-        assignee_id: assigneeId,
-        created_by: createdBy,
-        created_at: now,
-        updated_at: now,
-
-        // Frontend fields (camelCase)
-        dueDate: dueDate,
-        projectId: projectId,
-        assigneeId: assigneeId,
-        createdBy: createdBy,
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      // Use the createTask function from TaskContext
-      await createTaskFromContext(taskToCreate);
-      toast.success('Task created successfully');
-    } catch (error) {
-      console.error('Error creating task:', error);
-      toast.error('Failed to create task');
-    }
-  };
-
-  const handleUpdateTask = async (taskId: string, taskData: Partial<Omit<Task, 'id' | 'project_id' | 'created_by' | 'created_at' | 'updated_at'>>) => {
-    try {
-      await updateTask(taskId, taskData);
-      toast.success('Task updated successfully');
-    } catch (error) {
-      console.error('Error updating task:', error);
-      toast.error('Failed to update task');
-    }
-  };
-
   // Handle project deletion
   const handleDeleteProject = async (projectId: string) => {
     try {
@@ -299,35 +210,32 @@ export default function Projects() {
     }
   };
 
-  // Sort tasks based on sortConfig
-  const sortTasks = (tasks: Task[]) => {
-    if (!sortConfig) return tasks;
-
+  // Sort tasks based on the given key and direction
+  const sortTasks = (tasks: Task[], key: 'priority' | 'dueDate' | 'title' | 'status' = 'dueDate', direction: 'asc' | 'desc' = 'asc') => {
     return [...tasks].sort((a, b) => {
-      let aValue: any, bValue: any;
+      type SortableValue = number | string;
+      let aValue: SortableValue, bValue: SortableValue;
 
-      if (sortConfig.key === 'dueDate') {
+      if (key === 'dueDate') {
         aValue = a.due_date ? new Date(a.due_date).getTime() : Number.MAX_SAFE_INTEGER;
         bValue = b.due_date ? new Date(b.due_date).getTime() : Number.MAX_SAFE_INTEGER;
-      } else if (sortConfig.key === 'priority') {
+      } else if (key === 'priority') {
         const priorityOrder = { high: 3, medium: 2, low: 1 };
         aValue = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
         bValue = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
-      } else if (sortConfig.key === 'status') {
+      } else if (key === 'status') {
         const statusOrder = { todo: 1, in_progress: 2, done: 3 };
         aValue = statusOrder[a.status as keyof typeof statusOrder] || 0;
         bValue = statusOrder[b.status as keyof typeof statusOrder] || 0;
       } else {
-        aValue = a[sortConfig.key as keyof Task];
-        bValue = b[sortConfig.key as keyof Task];
+        aValue = a[key as keyof Task];
+        bValue = b[key as keyof Task];
       }
 
       if (aValue === bValue) return 0;
-      if (sortConfig.direction === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
+      return direction === 'asc' 
+        ? aValue > bValue ? 1 : -1
+        : aValue < bValue ? 1 : -1;
     });
   };
 
@@ -393,13 +301,6 @@ export default function Projects() {
     return priority.charAt(0).toUpperCase() + priority.slice(1);
   };
 
-  // Fallback for any existing usage of the old function
-  const getTaskStatusColor = (status: TaskStatus) => getTaskStatusStyle(status).text + ' ' + getTaskStatusStyle(status).bg;
-
-  const startEditing = (project: Project) => {
-    setEditingProject(project);
-    setIsProjectModalOpen(true);
-  };
 
   // Load tasks when component mounts and when projects change
   useEffect(() => {
@@ -421,38 +322,6 @@ export default function Projects() {
   const handleDeleteTaskClick = (taskId: string) => {
     setItemToDelete({ id: taskId, type: 'task' });
     setIsDeleteTaskModalOpen(true);
-  };
-
-  // Handle confirmed deletion
-  const handleConfirmDelete = async () => {
-    if (!itemToDelete) return;
-
-    try {
-      if (itemToDelete.type === 'project') {
-        await deleteProject(itemToDelete.id);
-        toast.success('Project deleted successfully');
-        setSelectedProjectId(null);
-        setIsDeleteProjectModalOpen(false);
-      } else {
-        await deleteTask(itemToDelete.id);
-        toast.success('Task deleted successfully');
-        
-        // Refresh tasks for the current project
-        if (selectedProjectId) {
-          const tasks = await getProjectTasks(selectedProjectId);
-          setProjectTasks(prev => ({
-            ...prev,
-            [selectedProjectId]: tasks
-          }));
-        }
-        setIsDeleteTaskModalOpen(false);
-      }
-    } catch (error) {
-      console.error(`Error deleting ${itemToDelete.type}:`, error);
-      toast.error(`Failed to delete ${itemToDelete.type}`);
-    } finally {
-      setItemToDelete(null);
-    }
   };
 
   // Show loading state
@@ -533,7 +402,7 @@ export default function Projects() {
                     <Plus className="h-4 w-4 mr-2" />
                     Add Task
                   </Button>
-                  {projectTasks[project.id] && sortTasks(projectTasks[project.id]).map((task) => (
+                  {projectTasks[project.id] && sortTasks(projectTasks[project.id], 'dueDate', 'asc').map((task) => (
                     <div key={task.id} className="p-3 border rounded-lg mb-2 hover:bg-gray-50 relative">
                       <div className="flex items-start space-x-3">
                         <button

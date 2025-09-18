@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // components/profile/ProfileForm.tsx
 'use client'
 
@@ -32,8 +31,9 @@ export function ProfileForm() {
         bio: bio,
       })
       setSuccess('Profile updated successfully!')
-    } catch (err: any) {
-      setError(err.message || 'An error occurred')
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'An error occurred');
     } finally {
       setLoading(false)
     }

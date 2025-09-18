@@ -12,6 +12,8 @@ type ServiceResponse<T> = {
 
 class ProjectService {
   private supabase = createClient()
+  private projectsTable = this.supabase.from('projects')
+  private projectMembersTable = this.supabase.from('project_members')
 
   async createProject(project: Omit<ProjectInsert, 'owner_id'>, userId: string): Promise<ServiceResponse<Project>> {
     try {
@@ -21,11 +23,11 @@ class ProjectService {
         status: 'active' as const
       }
 
-      const { data, error } = await (this.supabase
-        .from('projects') as any)
-        .insert([projectData])
+      const { data, error } = await this.projectsTable
+        .insert(projectData)
         .select()
         .single()
+        .returns<Project>()
 
       if (error) throw error
       if (!data) throw new Error('No data returned from create project')
@@ -42,11 +44,11 @@ class ProjectService {
 
   async getProjectById(id: string): Promise<ServiceResponse<Project>> {
     try {
-      const { data, error } = await (this.supabase
-        .from('projects') as any)
+      const { data, error } = await this.projectsTable
         .select('*')
         .eq('id', id)
         .single()
+        .returns<Project>()
 
       if (error) throw error
       return { data, error: null }
@@ -58,10 +60,10 @@ class ProjectService {
 
   async getUserProjects(userId: string): Promise<ServiceResponse<Project[]>> {
     try {
-      const { data, error } = await (this.supabase
-        .from('projects') as any)
+      const { data, error } = await this.projectsTable
         .select('*')
         .eq('owner_id', userId)
+        .returns<Project[]>()
 
       if (error) throw error
       return { data, error: null }
@@ -79,7 +81,7 @@ class ProjectService {
     try {
       // Verify ownership
       const { data: project, error: fetchError } = await (this.supabase
-        .from('projects') as any)
+        .from('projects'))
         .select('owner_id')
         .eq('id', id)
         .single()
@@ -88,12 +90,12 @@ class ProjectService {
       if (!project) throw new Error('Project not found')
       if (project.owner_id !== userId) throw new Error('Forbidden')
 
-      const { data: updatedProject, error: updateError } = await (this.supabase
-        .from('projects') as any)
-        .update(updates as Record<string, unknown>)
+      const { data: updatedProject, error: updateError } = await this.projectsTable
+        .update(updates)
         .eq('id', id)
         .select()
         .single()
+        .returns<Project>()
 
       if (updateError) throw updateError
       return { data: updatedProject, error: null }
@@ -107,7 +109,7 @@ class ProjectService {
     try {
       // Verify ownership
       const { data: project, error: fetchError } = await (this.supabase
-        .from('projects') as any)
+        .from('projects'))
         .select('owner_id')
         .eq('id', id)
         .single()
@@ -116,8 +118,7 @@ class ProjectService {
       if (!project) throw new Error('Project not found')
       if (project.owner_id !== userId) throw new Error('Forbidden')
 
-      const { error } = await (this.supabase
-        .from('projects') as any)
+      const { error } = await this.projectsTable
         .delete()
         .eq('id', id)
 
@@ -142,9 +143,8 @@ class ProjectService {
         joined_at: new Date().toISOString()
       }
 
-      const { error } = await (this.supabase
-        .from('project_members') as any)
-        .insert([memberData])
+      const { error } = await this.projectMembersTable
+        .insert(memberData)
 
       if (error) throw error
       return { data: true, error: null }

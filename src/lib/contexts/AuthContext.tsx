@@ -25,7 +25,6 @@ interface AuthContextType {
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<Profile>) => Promise<void>
   createProfile: (userId: string, email: string, fullName?: string) => Promise<Profile>
-  fetchProfile: (userId: string) => Promise<void>
   clearError: () => void
 }
 
@@ -111,31 +110,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     exchangeCode()
   }, [])
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      if (error && error.code === 'PGRST116') {
-        // Profile doesn't exist, this is okay for new users
-        console.log('Profile not found for user:', userId)
-        return
-      }
-
-      if (error) {
-        console.error('Error fetching profile:', error)
-        return
-      }
-
-      setProfile(data)
-    } catch (error) {
-      console.error('Error in fetchProfile:', error)
-    }
-  }, [supabase])
-
   const createProfile = useCallback(async (userId: string, email: string, fullName?: string) => {
     console.log('📄 Creating profile for user:', { userId, email, fullName })
     try {
@@ -146,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       console.log('📤 Inserting profile data:', profileData)
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabase)
         .from('profiles')
         .upsert(profileData, { onConflict: 'id', ignoreDuplicates: true })
         .select()
@@ -302,7 +276,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Refresh profile data
-      await fetchProfile(user.id)
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+      
+      if (data) {
+        setProfile(data)
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update profile'
       setError(errorMessage)
@@ -325,7 +307,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     updateProfile,
     createProfile,
-    fetchProfile,
     clearError,
   }
 

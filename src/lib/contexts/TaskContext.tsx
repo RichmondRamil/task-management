@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
-import { Task, TaskPriority, TaskStatus } from '@/lib/types/database'
+import { Task } from '@/lib/types/database'
 
 type SortField = 'priority' | 'due_date' | 'createdAt';
 type SortOrder = 'asc' | 'desc';
@@ -254,7 +254,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       
       // Convert camelCase to snake_case for database
-      const updateData: any = { ...updates };
+      const updateData = { ...updates };
       
       // Handle field name conversions
       if ('dueDate' in updates) {

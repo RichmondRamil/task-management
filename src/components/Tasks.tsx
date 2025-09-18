@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTasks } from '@/lib/contexts/TaskContext';
-import { Task, TaskStatus, TaskPriority } from '@/lib/types/database';
+import { Task } from '@/lib/types/database';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Edit, Check } from 'lucide-react';
+import {  Trash2, Edit, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 type TaskFilter = 'all' | 'my-tasks';
