@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 }
 
 // GET - Fetch user's projects
-export async function GET(request: Request) {
+export async function GET() {
   const supabase = createClient()
   
   // Get the session from the request

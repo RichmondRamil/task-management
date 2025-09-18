@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { Task } from '@/lib/types/database'
+import { RealtimeChannel } from '@supabase/supabase-js'
 
 type SortField = 'priority' | 'due_date' | 'createdAt';
 type SortOrder = 'asc' | 'desc';
@@ -50,7 +51,17 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Memoize the task formatter to prevent recreation on each render
-  const formatTask = useCallback((task: any): Task => ({
+  // Type for raw task data from the database (snake_case)
+  type DatabaseTask = Omit<Task, 'dueDate' | 'projectId' | 'assigneeId' | 'createdBy' | 'createdAt' | 'updatedAt'> & {
+    due_date: string | null;
+    project_id: string | null;
+    assignee_id: string | null;
+    created_by: string;
+    created_at: string;
+    updated_at: string;
+  };
+
+  const formatTask = useCallback((task: DatabaseTask): Task => ({
     ...task,
     due_date: task.due_date,
     project_id: task.project_id,
@@ -102,7 +113,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   // Set up realtime subscription and initial fetch
   useEffect(() => {
     let isMounted = true;
-    let subscription: any = null;
+    let subscription: RealtimeChannel | null = null;
 
     const setupSubscription = () => {
       subscription = supabaseRef.current
@@ -118,7 +129,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
             
             setTasks(prevTasks => {
               if (payload.eventType === 'INSERT') {
-                return [formatTask(payload.new), ...prevTasks];
+                return [formatTask(payload.new as DatabaseTask), ...prevTasks];
               } 
               if (payload.eventType === 'UPDATE') {
                 return prevTasks.map(task => 
@@ -405,7 +416,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
   const getProjectTasks = useCallback((projectId: string, sortBy: SortField = 'createdAt', sortOrder: SortOrder = 'desc'): Task[] => {
     // Filter tasks by project ID
-    let filteredTasks = tasks.filter(task => task.projectId === projectId);
+    const filteredTasks = tasks.filter(task => task.projectId === projectId);
     
     // Apply sorting if needed
     if (sortBy) {
