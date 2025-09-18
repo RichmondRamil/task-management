@@ -13,6 +13,44 @@ export type TaskStatus = 'todo' | 'in_progress' | 'done'
 export type TaskPriority = 'low' | 'medium' | 'high'
 export type MemberRole = 'owner' | 'admin' | 'member'
 
+export type Project = Database['public']['Tables']['projects']['Row']
+
+// Base task type with snake_case fields
+type BaseTask = Database['public']['Tables']['tasks']['Row']
+
+// Task type with both snake_case and camelCase properties
+export type Task = {
+  // Database fields
+  id: string
+  title: string
+  description: string | null
+  status: TaskStatus
+  priority: TaskPriority
+  due_date: string | null
+  project_id: string | null
+  assignee_id: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+  
+  // camelCase aliases for frontend use
+  dueDate: string | null
+  projectId: string | null
+  assigneeId: string | null
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+  
+  // Relations
+  project?: {
+    id: string
+    name: string
+    status: ProjectStatus
+  } | null
+  creator?: any // Add proper type if needed
+  assignee?: any // Add proper type if needed
+}
+
 export interface Database {
   public: {
     Tables: {
