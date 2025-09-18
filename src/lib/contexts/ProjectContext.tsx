@@ -4,15 +4,13 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { createClient } from '@/lib/supabase';
 import { Database } from '@/lib/types/database';
 
-export type Task = Database['public']['Tables']['tasks']['Row'];
-
-export type ProjectWithTasks = Database['public']['Tables']['projects']['Row'] & {
-  tasks?: Task[];
+type ProjectWithTasks = Database['public']['Tables']['projects']['Row'] & {
+  tasks?: Database['public']['Tables']['tasks']['Row'][];
 };
 
-export type Project = Database['public']['Tables']['projects']['Row'];
-export type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
-export type ProjectUpdate = Database['public']['Tables']['projects']['Update'];
+type Project = Database['public']['Tables']['projects']['Row'];
+type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
+type ProjectUpdate = Database['public']['Tables']['projects']['Update'];
 
 interface ProjectContextType {
   projects: ProjectWithTasks[] | null;

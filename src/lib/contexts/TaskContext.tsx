@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
-import { Task, TaskPriority, TaskStatus } from '@/lib/types/database'
+import { Task } from '@/lib/types/database'
 
 type SortField = 'priority' | 'due_date' | 'createdAt';
 type SortOrder = 'asc' | 'desc';
