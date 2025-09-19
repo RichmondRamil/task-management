@@ -2,23 +2,33 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useAuth } from '../../lib/contexts/AuthContext'
-import { useState } from 'react'
-export function Navigation() {
-  const { user, profile, signOut } = useAuth()
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
-  console.log('user',user)
+import { useState, useEffect } from 'react'
+import { Skeleton } from '@/components/ui/skeleton'
 
+export function Navigation() {
+  const { user, profile, signOut, loading } = useAuth()
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const pathname = usePathname()
+  const [isClient, setIsClient] = useState(false)
+
+  // Set isClient to true after component mounts
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Don't render anything during SSR or initial client-side render to avoid hydration mismatch
+  if (!isClient) {
+    return null
+  }
 
   const handleSignOut = async () => {
-    console.log('🎯 Navigation handleSignOut clicked')
     try {
-      console.log('📞 Calling signOut from AuthContext')
       await signOut()
-      console.log('✅ signOut completed, closing profile dropdown')
       setIsProfileOpen(false)
     } catch (error) {
-      console.error('❌ Error in handleSignOut:', error)
+      console.error('Error signing out:', error)
     }
   }
 
@@ -35,22 +45,37 @@ export function Navigation() {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
-            {user &&
+            {loading ? (
+              // Show skeleton loaders while auth state is loading
+              <>
+                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-8 w-16" />
+              </>
+            ) : user ? (
+              // Show navigation links for authenticated users
               <>
                 <Link
                   href="/projects"
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    pathname.startsWith('/projects')
+                      ? 'text-blue-600 font-semibold'
+                      : 'text-gray-700 hover:text-gray-900'
+                  }`}
                 >
                   Projects
                 </Link>
                 <Link
                   href="/tasks"
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    pathname.startsWith('/tasks')
+                      ? 'text-blue-600 font-semibold'
+                      : 'text-gray-700 hover:text-gray-900'
+                  }`}
                 >
                   Tasks
                 </Link>
               </>
-            }
+            ) : null}
           </div>
 
           {/* User Menu */}
